@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farm2Table Connect</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Auth Screen -->
+        <div id="auth-screen" class="screen active">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1>🌱 Farm2Table Connect</h1>
+                    <p>Smart food systems, zero waste, zero hunger</p>
+                </div>
+                
+                <div class="auth-box">
+                    <div class="auth-tabs">
+                        <button type="button" class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
+                        <button type="button" class="tab-btn" onclick="switchAuthTab('register')">Register</button>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form active">
+                        <input type="email" id="login-email" placeholder="Email" required value="farmer@test.com">
+                        <input type="password" id="login-password" placeholder="Password" required value="password">
+                        <button type="submit" class="btn-primary">Login</button>
+                    </form>
+                    
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form">
+                        <input type="text" id="register-name" placeholder="Full Name" required>
+                        <input type="email" id="register-email" placeholder="Email" required>
+                        <input type="password" id="register-password" placeholder="Password" required>
+                        <select id="register-role" required onchange="toggleVehicleField()">
+                            <option value="">Select Role</option>
+                            <option value="farmer">Farmer</option>
+                            <option value="buyer">Buyer</option>
+                            <option value="donor">Donor</option>
+                            <option value="delivery">Delivery Agent</option>
+                        </select>
+                        <input type="text" id="register-location" placeholder="Location" required>
+                        <input type="text" id="register-phone" placeholder="Phone">
+                        <div id="vehicle-field" style="display: none;">
+                            <select id="register-vehicle">
+                                <option value="">Select Vehicle Type</option>
+                                <option value="motorcycle">Motorcycle</option>
+                                <option value="car">Car</option>
+                                <option value="truck">Truck</option>
+                                <option value="bicycle">Bicycle</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-primary">Register</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main App -->
+        <div id="main-app" class="screen">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h1>🌱 Farm2Table</h1>
+                    <div class="header-actions">
+                        <span id="user-info">Welcome!</span>
+                        <div id="delivery-status" style="display: none;">
+                            <span id="availability-status"></span>
+                            <button type="button" onclick="toggleAvailability()" class="btn-secondary" id="availability-btn">
+                                Go Offline
+                            </button>
+                        </div>
+                        <button type="button" onclick="logout()" class="btn-secondary">Logout</button>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="nav">
+                    <button type="button" onclick="showScreen('dashboard')" class="nav-btn active">Dashboard</button>
+                    <button type="button" onclick="showScreen('marketplace')" class="nav-btn">Marketplace</button>
+                    <button type="button" onclick="showScreen('post-food')" class="nav-btn">Post Food</button>
+                    <button type="button" onclick="showScreen('orders')" class="nav-btn">Orders</button>
+                    <button type="button" onclick="showScreen('delivery-jobs')" class="nav-btn" id="delivery-jobs-btn" style="display: none;">
+                        Delivery Jobs
+                    </button>
+                    <button type="button" onclick="showScreen('my-deliveries')" class="nav-btn" id="my-deliveries-btn" style="display: none;">
+                        My Deliveries
+                    </button>
+                </nav>
+            </header>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Dashboard -->
+                <div id="dashboard" class="screen-content active">
+                    <h2>Dashboard</h2>
+                    <div class="stats-grid" id="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Food Items</h3>
+                            <p>2</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Donations</h3>
+                            <p>1</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Food Saved (kg)</h3>
+                            <p>0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>People Fed</h3>
+                            <p>0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Orders</h3>
+                            <p>0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Available Agents</h3>
+                            <p>1</p>
+                        </div>
+                    </div>
+                    
+                    <div class="dashboard-cards">
+                        <div class="card">
+                            <h3>Quick Actions</h3>
+                            <div id="quick-actions">
+                                <button type="button" onclick="showScreen('post-food')" class="btn-primary">Post New Food</button>
+                                <button type="button" onclick="showScreen('orders')" class="btn-secondary">View Orders</button>
+                                <button type="button" onclick="showScreen('delivery-jobs')" class="btn-secondary">Manage Delivery</button>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>Recent Activity</h3>
+                            <div id="recent-activity">
+                                <p>No recent activity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Marketplace -->
+                <div id="marketplace" class="screen-content">
+                    <h2>Marketplace</h2>
+                    <div class="filters">
+                        <select id="category-filter">
+                            <option value="">All Categories</option>
+                            <option value="vegetables">Vegetables</option>
+                            <option value="fruits">Fruits</option>
+                            <option value="grains">Grains</option>
+                        </select>
+                        <select id="type-filter">
+                            <option value="">All Types</option>
+                            <option value="sale">For Sale</option>
+                            <option value="donation">Donations</option>
+                        </select>
+                    </div>
+                    <div class="food-grid" id="food-grid">
+                        <!-- Food items will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Post Food -->
+                <div id="post-food" class="screen-content">
+                    <h2>Post Food Item</h2>
+                    <form id="post-food-form" class="form">
+                        <input type="text" id="food-title" placeholder="Food Title" required>
+                        <textarea id="food-description" placeholder="Description" required></textarea>
+                        
+                        <div class="form-row">
+                            <input type="number" id="food-quantity" placeholder="Quantity (kg)" min="1" required value="1">
+                            <input type="number" id="food-price" placeholder="Price per kg" min="0" step="0.1" required value="0">
+                        </div>
+                        
+                        <select id="food-category" required>
+                            <option value="">Select Category</option>
+                            <option value="vegetables">Vegetables</option>
+                            <option value="fruits">Fruits</option>
+                            <option value="grains">Grains</option>
+                            <option value="dairy">Dairy</option>
+                        </select>
+                        
+                        <select id="food-freshness" required>
+                            <option value="">Select Freshness</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low (Urgent)</option>
+                        </select>
+                        
+                        <label class="checkbox">
+                            <input type="checkbox" id="food-donation">
+                            <span>Mark as Donation (Free)</span>
+                        </label>
+                        
+                        <input type="text" id="food-image" placeholder="Image URL (optional)">
+                        
+                        <button type="submit" class="btn-primary">Post Food Item</button>
+                    </form>
+                </div>
+
+                <!-- Orders -->
+                <div id="orders" class="screen-content">
+                    <h2>Your Orders</h2>
+                    <div class="orders-list" id="orders-list">
+                        <p>No orders yet</p>
+                    </div>
+                </div>
+
+                <!-- Delivery Jobs -->
+                <div id="delivery-jobs" class="screen-content">
+                    <h2>Manage Delivery</h2>
+                    <div id="delivery-management">
+                        <p>No orders need delivery assignment at the moment.</p>
+                    </div>
+                </div>
+
+                <!-- My Deliveries -->
+                <div id="my-deliveries" class="screen-content">
+                    <h2>My Deliveries</h2>
+                    <div class="delivery-stats">
+                        <div class="stat-card">
+                            <h3>Available Jobs</h3>
+                            <p id="available-jobs-count">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Active Deliveries</h3>
+                            <p id="active-deliveries-count">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Completed</h3>
+                            <p id="completed-deliveries-count">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="delivery-sections">
+                        <div class="card">
+                            <h3>Available Delivery Jobs</h3>
+                            <div id="available-jobs-list" class="jobs-list">
+                                <p>No available delivery jobs at the moment.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h3>My Active Deliveries</h3>
+                            <div id="active-deliveries-list" class="deliveries-list">
+                                <p>No active deliveries.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
