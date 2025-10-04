@@ -1,16 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const impactController = require("../controllers/impactController");
+const { authenticate, authorizeRoles } = require("../middleware/auth");
 
-// Get overall impact stats
+// Public routes
 router.get("/", impactController.getImpactStats);
-
-// Get impact of a specific donor
-router.get("/:donorId", impactController.getDonorImpact);
 
 // Health check route
 router.get("/ping", (req, res) => {
   res.json({ msg: "Impact API is alive" });
 });
+
+// Authenticated route: donor-specific impact
+router.get(
+  "/donor",
+  authenticate,
+  authorizeRoles("Donor", "Admin"),
+  impactController.getDonorImpact
+);
 
 module.exports = router;

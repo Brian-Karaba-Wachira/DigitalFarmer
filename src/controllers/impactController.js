@@ -1,6 +1,6 @@
 const { db } = require("../config/firebase");
 
-// Get overall impact stats
+// Get overall impact stats (public)
 exports.getImpactStats = async (req, res) => {
   try {
     const donationsSnap = await db.ref("donations").once("value");
@@ -28,15 +28,15 @@ exports.getImpactStats = async (req, res) => {
   }
 };
 
-// Get donor impact by donorId
+// Get donor impact for authenticated user
 exports.getDonorImpact = async (req, res) => {
   try {
-    const { donorId } = req.params;
-
-    if (!donorId) {
-      return res.status(400).json({ error: "donorId is required" });
+    const { role, email } = req.user;
+    if (!["Donor", "Admin"].includes(role)) {
+      return res.status(403).json({ error: "Access denied" });
     }
 
+    const donorId = email;
     const snapshot = await db
       .ref("donations")
       .orderByChild("donorId")

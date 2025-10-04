@@ -3,12 +3,18 @@ const { db } = require("../config/firebase");
 // Allowed delivery statuses
 const VALID_STATUSES = ["pending", "in-transit", "completed", "cancelled"];
 
-//  Create delivery (always starts as pending)
+// Create delivery (Delivery agents or Admin)
 exports.createDelivery = async (req, res) => {
   try {
+    const { role, email } = req.user;
+    if (!["Delivery", "Admin"].includes(role)) {
+      return res.status(403).json({ error: "Only delivery agents or admin can create deliveries" });
+    }
+
     const newRef = db.ref("deliveries").push();
     await newRef.set({
       ...req.body,
+      assignedTo: role === "Delivery" ? email : req.body.assignedTo || null,
       status: "pending",
       createdAt: Date.now(),
       updatedAt: Date.now(),
@@ -20,14 +26,18 @@ exports.createDelivery = async (req, res) => {
   }
 };
 
-//  Get all deliveries
+// Get all deliveries (Admin sees all, Delivery sees assigned only)
 exports.getAllDeliveries = async (req, res) => {
   try {
+    const { role, email } = req.user;
     const snapshot = await db.ref("deliveries").once("value");
-
     const deliveries = [];
+
     snapshot.forEach(child => {
-      deliveries.push({ id: child.key, ...child.val() });
+      const data = { id: child.key, ...child.val() };
+      if (role === "Admin" || data.assignedTo === email) {
+        deliveries.push(data);
+      }
     });
 
     res.json(deliveries);
@@ -37,28 +47,38 @@ exports.getAllDeliveries = async (req, res) => {
   }
 };
 
-//  Get delivery by ID
+// Get delivery by ID
 exports.getDeliveryById = async (req, res) => {
   try {
+    const { role, email } = req.user;
     const snapshot = await db.ref(`deliveries/${req.params.id}`).once("value");
-    if (!snapshot.exists()) {
-      return res.status(404).json({ error: "Delivery not found" });
+
+    if (!snapshot.exists()) return res.status(404).json({ error: "Delivery not found" });
+
+    const delivery = snapshot.val();
+    if (role !== "Admin" && delivery.assignedTo !== email) {
+      return res.status(403).json({ error: "Access denied" });
     }
-    res.json({ id: req.params.id, ...snapshot.val() });
+
+    res.json({ id: req.params.id, ...delivery });
   } catch (err) {
     console.error("Error fetching delivery:", err);
     res.status(500).json({ error: err.message });
   }
 };
 
-//  Update delivery (general fields, not status)
+// Update delivery (general fields)
 exports.updateDelivery = async (req, res) => {
   try {
+    const { role, email } = req.user;
     const deliveryRef = db.ref(`deliveries/${req.params.id}`);
     const snapshot = await deliveryRef.once("value");
 
-    if (!snapshot.exists()) {
-      return res.status(404).json({ error: "Delivery not found" });
+    if (!snapshot.exists()) return res.status(404).json({ error: "Delivery not found" });
+
+    const delivery = snapshot.val();
+    if (role !== "Admin" && delivery.assignedTo !== email) {
+      return res.status(403).json({ error: "Access denied" });
     }
 
     await deliveryRef.update({ ...req.body, updatedAt: Date.now() });
@@ -69,20 +89,21 @@ exports.updateDelivery = async (req, res) => {
   }
 };
 
-//  Change delivery status (only valid values)
+// Change delivery status
 exports.updateDeliveryStatus = async (req, res) => {
   try {
     const { status } = req.body;
+    const { role, email } = req.user;
 
-    if (!VALID_STATUSES.includes(status)) {
-      return res.status(400).json({ error: "Invalid status value" });
-    }
+    if (!VALID_STATUSES.includes(status)) return res.status(400).json({ error: "Invalid status value" });
 
     const deliveryRef = db.ref(`deliveries/${req.params.id}`);
     const snapshot = await deliveryRef.once("value");
+    if (!snapshot.exists()) return res.status(404).json({ error: "Delivery not found" });
 
-    if (!snapshot.exists()) {
-      return res.status(404).json({ error: "Delivery not found" });
+    const delivery = snapshot.val();
+    if (role !== "Admin" && delivery.assignedTo !== email) {
+      return res.status(403).json({ error: "Access denied" });
     }
 
     await deliveryRef.update({ status, updatedAt: Date.now() });
@@ -96,11 +117,15 @@ exports.updateDeliveryStatus = async (req, res) => {
 // Delete delivery
 exports.deleteDelivery = async (req, res) => {
   try {
+    const { role, email } = req.user;
     const deliveryRef = db.ref(`deliveries/${req.params.id}`);
     const snapshot = await deliveryRef.once("value");
 
-    if (!snapshot.exists()) {
-      return res.status(404).json({ error: "Delivery not found" });
+    if (!snapshot.exists()) return res.status(404).json({ error: "Delivery not found" });
+
+    const delivery = snapshot.val();
+    if (role !== "Admin" && delivery.assignedTo !== email) {
+      return res.status(403).json({ error: "Access denied" });
     }
 
     await deliveryRef.remove();

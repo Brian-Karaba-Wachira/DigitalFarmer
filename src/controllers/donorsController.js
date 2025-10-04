@@ -3,15 +3,19 @@ const { db } = require("../config/firebase");
 // Post a donation (specific from a donor)
 exports.postDonation = async (req, res) => {
   try {
-    const { donorId, food, quantity, expiryDate } = req.body;
+    const { role, email } = req.user;
+    if (!["Donor", "Admin"].includes(role)) {
+      return res.status(403).json({ error: "Only donors or admin can post donations" });
+    }
 
-    if (!donorId || !food || !quantity) {
+    const { food, quantity, expiryDate } = req.body;
+    if (!food || !quantity) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     const newRef = db.ref("donations").push();
     await newRef.set({
-      donorId,
+      donorId: email, // use authenticated donor
       food,
       quantity,
       expiryDate: expiryDate || null,
@@ -31,12 +35,12 @@ exports.postDonation = async (req, res) => {
 // Get donor's total impact
 exports.getImpact = async (req, res) => {
   try {
-    const { donorId } = req.params;
-
-    if (!donorId) {
-      return res.status(400).json({ error: "Donor ID is required" });
+    const { role, email } = req.user;
+    if (!["Donor", "Admin"].includes(role)) {
+      return res.status(403).json({ error: "Only donors or admin can view impact" });
     }
 
+    const donorId = email;
     const snapshot = await db
       .ref("donations")
       .orderByChild("donorId")

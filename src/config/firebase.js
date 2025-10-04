@@ -17,4 +17,3 @@ const db = admin.database();
 const storage = admin.storage().bucket();
 
 module.exports = { admin, db, storage };
-

@@ -1,16 +1,23 @@
 const { db } = require("../config/firebase");
 
-// Register a new user
+// Register a new user (Admin only)
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, role } = req.body;
-    if (!name || !email || !role) return res.status(400).json({ error: "All fields required" });
+    const { role } = req.user;
+    if (role !== "Admin") {
+      return res.status(403).json({ error: "Only admins can register users" });
+    }
+
+    const { name, email, role: userRole } = req.body;
+    if (!name || !email || !userRole) {
+      return res.status(400).json({ error: "All fields required" });
+    }
 
     const newUserRef = db.ref("users").push();
     await newUserRef.set({
       name,
       email,
-      role,
+      role: userRole,
       createdAt: Date.now(),
     });
 
@@ -20,9 +27,14 @@ exports.registerUser = async (req, res) => {
   }
 };
 
-// Get all users
+// Get all users (Admin only)
 exports.getUsers = async (req, res) => {
   try {
+    const { role } = req.user;
+    if (role !== "Admin") {
+      return res.status(403).json({ error: "Only admins can view users" });
+    }
+
     const snapshot = await db.ref("users").once("value");
     res.json(snapshot.val() || {});
   } catch (err) {
