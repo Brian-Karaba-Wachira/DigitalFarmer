@@ -1,18 +1,14 @@
-// src/routes/auth.js
 const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/authController");
+const { authenticate, authorizeRoles } = require("../middleware/auth");
 
 // ---------------- AUTH ROUTES ----------------
-
-// Register a new user (anyone can register)
 router.post("/register", authController.register);
-
-// Login user
 router.post("/login", authController.login);
+router.post("/forgot-password", authController.forgotPassword);
 
-// Note: /create-admin route removed for security
+// Example of protected route (optional)
+// router.get("/users", authenticate, authorizeRoles("admin"), usersController.getAllUsers);
 
 module.exports = router;
-const usersController = require("../controllers/usersController");
-const { authenticateUser, authorizeRoles } = require("../middleware/auth");

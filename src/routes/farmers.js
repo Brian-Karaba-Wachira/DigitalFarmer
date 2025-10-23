@@ -8,8 +8,8 @@ const { uploadSingle } = require("../middleware/upload");
 router.post(
   "/surplus",
   authenticate,
-  authorizeRoles("Farmer"),
-  uploadSingle("image"), // "image" is the key in form-data
+  authorizeRoles("farmer"), // lowercase
+  uploadSingle("image"), 
   farmersController.postSurplus
 );
 
@@ -17,12 +17,18 @@ router.post(
 router.post(
   "/donate",
   authenticate,
-  authorizeRoles("Farmer"),
+  authorizeRoles("farmer"), // lowercase
   uploadSingle("image"),
   farmersController.donateProduce
 );
 
 // Get farmer reputation
-router.get("/:farmerId/reputation", authenticate, authorizeRoles("Farmer"), farmersController.getReputation);
+router.get("/:farmerId/reputation", authenticate, authorizeRoles("farmer"), farmersController.getReputation);
 
+router.get(
+  "/dashboard",
+  authenticate,
+  authorizeRoles("farmer"),
+  farmersController.getDashboard
+);
 module.exports = router;

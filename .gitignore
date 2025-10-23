@@ -1,5 +1,9 @@
 node_modules
 serviceAccountKey.json
 .env
+<<<<<<< HEAD
 npm-debug.log
 
+=======
+npm-debug.log
+>>>>>>> frontend

@@ -1,29 +1,44 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-// Authenticate JWT
+// ------------------- Authenticate JWT -------------------
 const authenticate = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const token = authHeader.split(" ")[1];
   try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized: No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1]; // ✅ get token from "Bearer <token>"
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // attach user info to request
+
+    // Normalize role to lowercase
+    req.user = {
+      ...decoded,
+      role: decoded.role ? String(decoded.role).toLowerCase() : undefined,
+    };
+
     next();
   } catch (err) {
-    return res.status(401).json({ error: "Invalid token" });
+    console.error("Authentication error:", err.message);
+    return res.status(401).json({ error: "Unauthorized: Invalid token" });
   }
 };
 
-// Authorize roles
+// ------------------- Authorize Roles -------------------
 const authorizeRoles = (...roles) => {
+  const allowed = roles.map((r) => String(r).toLowerCase());
   return (req, res, next) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({ error: "Forbidden: insufficient role" });
+    if (!req.user)
+      return res.status(401).json({ error: "Unauthorized: No user info" });
+
+    if (!allowed.includes(req.user.role)) {
+      return res.status(403).json({
+        error: `Forbidden: Requires role(s): ${allowed.join(", ")}`,
+      });
     }
+
     next();
   };
 };

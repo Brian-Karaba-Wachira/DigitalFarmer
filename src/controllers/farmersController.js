@@ -1,32 +1,16 @@
-const { db, storage } = require("../config/firebase");
-const multer = require("multer");
-const upload = multer({ storage: multer.memoryStorage() }); // store file in memory
+const { db } = require("../config/firebase");
+const { uploadFileToFirebase } = require("../utils/uploadFile"); // if you use it
 
-// Helper function to upload file to Firebase Storage
-const uploadFileToFirebase = async (file, folder = "uploads") => {
-  if (!file) return null;
-
-  const fileName = `${folder}/${Date.now()}_${file.originalname}`;
-  const fileRef = storage.bucket().file(fileName);
-
-  await fileRef.save(file.buffer, {
-    contentType: file.mimetype,
-  });
-
-  // Make file public and return URL
-  await fileRef.makePublic();
-  return fileRef.publicUrl();
-};
-
-// Post surplus for sale (with optional image)
-exports.postSurplus = async (req, res) => {
+// ------------------- Post surplus -------------------
+const postSurplus = async (req, res) => {
   try {
     const { role, email } = req.user;
-    if (role !== "Farmer") return res.status(403).json({ error: "Only farmers can post surplus" });
+    if (role !== "farmer")
+      return res.status(403).json({ error: "Only farmers can post surplus" });
 
     const { crop, quantity, price } = req.body;
     if (!crop || !quantity || !price)
-      return res.status(400).json({ error: "All fields (crop, quantity, price) are required" });
+      return res.status(400).json({ error: "All fields are required" });
 
     let imageUrl = null;
     if (req.file) {
@@ -39,26 +23,26 @@ exports.postSurplus = async (req, res) => {
       crop,
       quantity,
       price,
-      type: "sale",
       imageUrl,
       createdAt: Date.now(),
     });
 
-    res.status(201).json({ message: "Surplus posted successfully", id: newRef.key, imageUrl });
+    res.status(201).json({ message: "Surplus posted", id: newRef.key });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Donate produce (with optional image)
-exports.donateProduce = async (req, res) => {
+// ------------------- Donate produce -------------------
+const donateProduce = async (req, res) => {
   try {
     const { role, email } = req.user;
-    if (role !== "Farmer") return res.status(403).json({ error: "Only farmers can donate produce" });
+    if (role !== "farmer")
+      return res.status(403).json({ error: "Only farmers can donate produce" });
 
     const { crop, quantity } = req.body;
     if (!crop || !quantity)
-      return res.status(400).json({ error: "All fields (crop, quantity) are required" });
+      return res.status(400).json({ error: "All fields are required" });
 
     let imageUrl = null;
     if (req.file) {
@@ -70,25 +54,23 @@ exports.donateProduce = async (req, res) => {
       farmerId: email,
       crop,
       quantity,
-      urgent: true,
       imageUrl,
       createdAt: Date.now(),
     });
 
-    res.status(201).json({ message: "Donation posted successfully", id: newRef.key, imageUrl });
+    res.status(201).json({ message: "Donation posted", id: newRef.key });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Get farmer reputation
-exports.getReputation = async (req, res) => {
+// ------------------- Get reputation -------------------
+const getReputation = async (req, res) => {
   try {
     const { farmerId } = req.params;
-    if (!farmerId) return res.status(400).json({ error: "Farmer ID is required" });
+    if (!farmerId) return res.status(400).json({ error: "Farmer ID required" });
 
     const snapshot = await db.ref("ratings").orderByChild("farmerId").equalTo(farmerId).once("value");
-
     if (!snapshot.exists()) return res.json({ farmerId, reputationScore: 0 });
 
     let total = 0, count = 0;
@@ -102,4 +84,38 @@ exports.getReputation = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-// Middleware to handle file uploads for surplus and donations
+
+// ------------------- Dashboard -------------------
+const getDashboard = async (req, res) => {
+  try {
+    const { email, role } = req.user;
+    if (role !== "farmer")
+      return res.status(403).json({ error: "Access denied: Farmers only" });
+
+    const surplusSnap = await db.ref("surplus").orderByChild("farmerId").equalTo(email).once("value");
+    const donationsSnap = await db.ref("donations").orderByChild("farmerId").equalTo(email).once("value");
+
+    const surplusList = [];
+    const donationList = [];
+
+    surplusSnap.forEach(item => surplusList.push({ id: item.key, ...item.val() }));
+    donationsSnap.forEach(item => donationList.push({ id: item.key, ...item.val() }));
+
+    res.json({
+      message: "Farmer dashboard loaded",
+      farmer: email,
+      surplus: surplusList,
+      donations: donationList,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ✅ Export them properly
+module.exports = {
+  postSurplus,
+  donateProduce,
+  getReputation,
+  getDashboard,
+};

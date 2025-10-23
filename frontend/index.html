@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Farm2Table Connect</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- ========== AUTH SCREEN ========== -->
+    <div id="auth-screen" class="screen active">
+      <div class="auth-box">
+        <h2>🌿 Farm2Table Connect</h2>
+        <p>Smart food systems, zero waste, zero hunger</p>
+
+        <div id="form-container">
+          <input type="email" id="email" placeholder="Email" required />
+          <input type="password" id="password" placeholder="Password" required />
+          <select id="role">
+            <option value="farmer">Farmer</option>
+            <option value="buyer">Buyer</option>
+            <option value="donor">Donor</option>
+            <option value="delivery">Delivery</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          <div class="buttons">
+            <button id="login-btn">Login</button>
+            <button id="register-btn">Register</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== DASHBOARDS ========== -->
+    <div id="dashboards">
+
+      <!-- Farmer Dashboard -->
+      <div id="farmer-dashboard" class="dashboard">
+        <div class="dash-header">
+          <h2>👨‍🌾 Farmer Dashboard</h2>
+          <button class="logout-btn">Logout</button>
+        </div>
+        <p>Welcome, Farmer! Manage your surplus crops and donations below.</p>
+        <div id="farmer-content">
+          <button class="action-btn">Upload Surplus / Donation</button>
+          <div class="listings" id="farmer-listings"></div>
+        </div>
+      </div>
+
+      <!-- Buyer Dashboard -->
+      <div id="buyer-dashboard" class="dashboard">
+        <div class="dash-header">
+          <h2>🛒 Buyer Dashboard</h2>
+          <button class="logout-btn">Logout</button>
+        </div>
+        <p>View available surplus food and claim or purchase items.</p>
+        <div id="buyer-content">
+          <div class="listings" id="buyer-items"></div>
+        </div>
+      </div>
+
+      <!-- Donor Dashboard -->
+      <div id="donor-dashboard" class="dashboard">
+        <div class="dash-header">
+          <h2>💚 Donor Dashboard</h2>
+          <button class="logout-btn">Logout</button>
+        </div>
+        <p>Track your donations and manage food contributions.</p>
+        <div id="donor-content">
+          <button class="action-btn">Add New Donation</button>
+          <div class="listings" id="donor-list"></div>
+        </div>
+      </div>
+
+      <!-- Delivery Dashboard -->
+      <div id="delivery-dashboard" class="dashboard">
+        <div class="dash-header">
+          <h2>🚚 Delivery Dashboard</h2>
+          <button class="logout-btn">Logout</button>
+        </div>
+        <p>Pick items ready for delivery and ensure quick food access.</p>
+        <div id="delivery-content">
+          <div class="listings" id="delivery-list"></div>
+        </div>
+      </div>
+
+      <!-- Admin Dashboard -->
+      <div id="admin-dashboard" class="dashboard">
+        <div class="dash-header">
+          <h2>🧭 Admin Dashboard</h2>
+          <button class="logout-btn">Logout</button>
+        </div>
+        <p>Manage users, donations, and monitor the impact of the platform.</p>
+        <div id="admin-content">
+          <div class="listings" id="admin-donations"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
